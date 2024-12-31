@@ -5,8 +5,6 @@ const News = () => {
   const [search, setSearch] = useState("estados unidos");
   const [news, setNews] = useState([]);
 
-  const apiKey = import.meta.env.VITE_API_KEY;
-
   const getData = async () => {
     if (!search.trim()) {
       // Si el input está vacío, no hacer la solicitud
@@ -14,7 +12,7 @@ const News = () => {
     }
 
     const response = await fetch(
-      `https://newsapi.org/v2/everything?q=${search}&language=es&apiKey=${apiKey}`
+      `https://newsapi.org/v2/everything?q=${search}&language=es&apiKey=1f2a4c83b9784abda0442d186e77843d`
     );
     const data = await response.json();
 
