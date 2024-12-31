@@ -12,7 +12,9 @@ const News = () => {
     }
 
     const response = await fetch(
-      `https://newsapi.org/v2/everything?q=${search}&language=es&apiKey=1f2a4c83b9784abda0442d186e77843d`
+      `https://newsapi.org/v2/everything?q=${search}&language=es&apiKey=${
+        import.meta.env.VITE_API_KEY
+      }`
     );
     const data = await response.json();
 
@@ -36,11 +38,11 @@ const News = () => {
 
   return (
     <div className="news">
-      <nav className="nav flex justify-around items-center w-full h-20 bg-blue-400 text-semibold gap-2 ">
+      <nav className="nav flex justify-around items-center w-full h-20 bg-blue-900 text-semibold gap-2 ">
         <div>
-          <h1 className="font-semibold">Trendy News</h1>
+          <h1 className="font-semibold text-white text-3xl ">Trendy News</h1>
         </div>
-        <ul className="flex gap-4">
+        <ul className="flex gap-4 text-white">
           <a>All News</a>
           <a>Trending</a>
         </ul>
@@ -61,41 +63,41 @@ const News = () => {
         </div>
       </nav>
       <div className="flex justify-center item-center mt-4 mb-8 font-semibold text-3xl">
-        Stay updated with trending
+        Keep up with the latest trends.
       </div>
       <div className="flex justify-center items-center gap-2 mt-4 ">
         <button
           onClick={userInput}
           value="sports"
-          className="bg-red-400 p-1 rounded-lg px-8 text-white font-medium"
+          className="bg-blue-700 p-1 rounded-lg px-8 text-white font-medium hover:bg-blue-600 active:bg-blue-800"
         >
           Sports
         </button>
         <button
           onClick={userInput}
           value="politics"
-          className="bg-red-400 p-1 rounded-lg px-8 text-white font-medium"
+          className="bg-blue-700 p-1 rounded-lg px-8 text-white font-medium hover:bg-blue-600 active:bg-blue-800"
         >
           Politics
         </button>
         <button
           onClick={userInput}
           value="entertainment"
-          className="bg-red-400 p-1 rounded-lg px-8 text-white font-medium"
+          className="bg-blue-700 p-1 rounded-lg px-8 text-white font-medium hover:bg-blue-600 active:bg-blue-800"
         >
           Entertainment
         </button>
         <button
           onClick={userInput}
           value="health"
-          className="bg-red-400 p-1 rounded-lg px-8 text-white font-medium"
+          className="bg-blue-700 p-1 rounded-lg px-8 text-white font-medium hover:bg-blue-600 active:bg-blue-800"
         >
           Health
         </button>
         <button
           onClick={userInput}
           value="fitness"
-          className="bg-red-400 p-1 rounded-lg px-8 text-white font-medium"
+          className="bg-blue-700 p-1 rounded-lg px-8 text-white font-medium hover:bg-blue-600 active:bg-blue-800"
         >
           Fitness
         </button>

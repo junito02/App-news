@@ -6,7 +6,7 @@ const Card = ({ data }) => {
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-8 px-10">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-8 px-16">
       {data.map((item, index) => {
         // Verificar si el artículo tiene una imagen
         if (!item.urlToImage) {
