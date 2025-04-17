@@ -4,23 +4,81 @@ import Card from "../Componentes/Card";
 const News = () => {
   const [search, setSearch] = useState("estados unidos");
   const [news, setNews] = useState([]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const getData = async () => {
     if (!search.trim()) {
-      // Si el input está vacío, no hacer la solicitud
       return;
     }
 
-    const response = await fetch(
-      `https://newsapi.org/v2/everything?q=${search}&language=es&apiKey=${
-        import.meta.env.VITE_API_KEY
-      }`
-    );
-    const data = await response.json();
+    setLoading(true);
+    setError(null);
 
-    // Solo actualizar el estado si se recibe una respuesta válida
-    if (data.articles) {
-      setNews(data.articles);
+    try {
+      console.log("Fetching news for:", search);
+      // Removemos el parámetro country y usamos solo el idioma
+      const apiUrl = `https://gnews.io/api/v4/search?q=${search}&lang=es&max=10&apikey=${
+        import.meta.env.VITE_API_KEY
+      }`;
+      console.log("API URL:", apiUrl);
+
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      console.log("Response status:", response.status);
+      const data = await response.json();
+      console.log("API Response:", data);
+
+      if (response.status === 401) {
+        setError(
+          "Error de autenticación: La API key no es válida o no está activa."
+        );
+        return;
+      }
+
+      if (response.status === 403) {
+        setError(
+          "Error de acceso: Has excedido el límite de peticiones o la API key no está activa."
+        );
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data.errors
+            ? Object.values(data.errors)[0]
+            : "Error al obtener las noticias"
+        );
+      }
+
+      if (data.articles && data.articles.length > 0) {
+        const transformedArticles = data.articles.map((article) => ({
+          title: article.title,
+          urlToImage: article.image || "https://via.placeholder.com/300x200",
+          url: article.url,
+          description: article.description,
+        }));
+        console.log("Transformed articles:", transformedArticles);
+        setNews(transformedArticles);
+      } else {
+        setError("No se encontraron noticias para esta búsqueda");
+        setNews([]);
+      }
+    } catch (error) {
+      console.error("Error fetching news:", error);
+      setError(
+        error.message ||
+          "Error al obtener las noticias. Por favor intenta de nuevo más tarde."
+      );
+      setNews([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -36,76 +94,141 @@ const News = () => {
     setSearch(e.target.value);
   };
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   return (
-    <div className="news">
-      <nav className="nav flex justify-around items-center w-full h-20 bg-blue-900 text-semibold gap-2 ">
-        <div>
-          <h1 className="font-semibold text-white text-3xl ">Trendy News</h1>
+    <div className="news min-h-screen bg-gray-100">
+      <nav className="nav bg-blue-900 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            {/* Logo y título */}
+            <div className="flex items-center">
+              <h1 className="text-white text-xl sm:text-2xl md:text-3xl font-semibold">
+                Trendy News
+              </h1>
+            </div>
+
+            {/* Menú hamburguesa para móvil */}
+            <div className="flex items-center sm:hidden">
+              <button
+                onClick={toggleMenu}
+                className="text-white hover:text-gray-300 focus:outline-none"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  {isMenuOpen ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  )}
+                </svg>
+              </button>
+            </div>
+
+            {/* Barra de búsqueda y enlaces para desktop */}
+            <div className="hidden sm:flex items-center space-x-4">
+              <div className="flex items-center">
+                <input
+                  type="text"
+                  value={search}
+                  placeholder="Search News"
+                  className="px-3 py-1 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={handleInput}
+                />
+                <button
+                  onClick={getData}
+                  className="bg-blue-700 px-4 py-1 rounded-r-lg text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  Search
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        <ul className="flex gap-4 text-white">
-          <a>All News</a>
-          <a>Trending</a>
-        </ul>
-        <div>
-          <input
-            type="text"
-            value={search}
-            placeholder="Search News"
-            className="text-center"
-            onChange={handleInput}
-          />
-          <button
-            onClick={getData}
-            className="p-1 rounded-lg bg-blue-700 ml-2 px-3 hover:bg-blue-600 text-white"
-          >
-            Search
-          </button>
+
+        {/* Menú móvil */}
+        <div
+          className={`${
+            isMenuOpen ? "block" : "hidden"
+          } sm:hidden bg-blue-800 pb-4 px-4`}
+        >
+          <div className="flex flex-col space-y-3">
+            <div className="flex">
+              <input
+                type="text"
+                value={search}
+                placeholder="Search News"
+                className="flex-1 px-3 py-1 rounded-l-lg focus:outline-none"
+                onChange={handleInput}
+              />
+              <button
+                onClick={getData}
+                className="bg-blue-700 px-4 py-1 rounded-r-lg text-white hover:bg-blue-600"
+              >
+                Search
+              </button>
+            </div>
+          </div>
         </div>
       </nav>
-      <div className="flex justify-center item-center mt-4 mb-8 font-semibold text-3xl">
-        Keep up with the latest trends.
-      </div>
-      <div className="flex justify-center items-center gap-2 mt-4 ">
-        <button
-          onClick={userInput}
-          value="sports"
-          className="bg-blue-700 p-1 rounded-lg px-8 text-white font-medium hover:bg-blue-600 active:bg-blue-800"
-        >
-          Sports
-        </button>
-        <button
-          onClick={userInput}
-          value="politics"
-          className="bg-blue-700 p-1 rounded-lg px-8 text-white font-medium hover:bg-blue-600 active:bg-blue-800"
-        >
-          Politics
-        </button>
-        <button
-          onClick={userInput}
-          value="entertainment"
-          className="bg-blue-700 p-1 rounded-lg px-8 text-white font-medium hover:bg-blue-600 active:bg-blue-800"
-        >
-          Entertainment
-        </button>
-        <button
-          onClick={userInput}
-          value="health"
-          className="bg-blue-700 p-1 rounded-lg px-8 text-white font-medium hover:bg-blue-600 active:bg-blue-800"
-        >
-          Health
-        </button>
-        <button
-          onClick={userInput}
-          value="fitness"
-          className="bg-blue-700 p-1 rounded-lg px-8 text-white font-medium hover:bg-blue-600 active:bg-blue-800"
-        >
-          Fitness
-        </button>
-      </div>
-      <div>
-        {/* Renderiza las noticias solo si hay artículos */}
-        {news.length > 0 ? <Card data={news} /> : <p>No news available</p>}
-      </div>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-center mb-8">
+          Keep up with the latest trends.
+        </h2>
+
+        {/* Categorías */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4 mb-8">
+          {["deportes", "política", "entretenimiento", "salud", "fitness"].map(
+            (category, index) => (
+              <button
+                key={index}
+                onClick={userInput}
+                value={category}
+                className="bg-blue-700 py-2 px-4 rounded-lg text-white text-sm sm:text-base font-medium hover:bg-blue-600 active:bg-blue-800 transition-colors"
+              >
+                {category.charAt(0).toUpperCase() + category.slice(1)}
+              </button>
+            )
+          )}
+        </div>
+
+        {/* Contenido principal */}
+        <div className="space-y-4">
+          {loading && (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700"></div>
+            </div>
+          )}
+          {error && <p className="text-center text-red-500 py-4">{error}</p>}
+          {!loading && !error && news.length > 0 ? (
+            <Card data={news} />
+          ) : (
+            !loading &&
+            !error && (
+              <p className="text-center text-gray-600 py-4">
+                No hay noticias disponibles
+              </p>
+            )
+          )}
+        </div>
+      </main>
     </div>
   );
 };
