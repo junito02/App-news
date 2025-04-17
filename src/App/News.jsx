@@ -1,3 +1,4 @@
+// Configuración de la API key para producción
 import React, { useEffect, useState } from "react";
 import Card from "../Componentes/Card";
 
@@ -17,44 +18,35 @@ const News = () => {
     setError(null);
 
     try {
-      console.log("Fetching news for:", search);
-      // Removemos el parámetro country y usamos solo el idioma
-      const apiUrl = `https://gnews.io/api/v4/search?q=${search}&lang=es&max=10&apikey=${
-        import.meta.env.VITE_API_KEY
-      }`;
-      console.log("API URL:", apiUrl);
+      const apiKey = import.meta.env.VITE_API_KEY;
+      console.log("Using API Key:", apiKey); // Para verificar la API key
 
-      const response = await fetch(apiUrl, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-        },
-      });
+      // Usando el endpoint básico de búsqueda
+      const apiUrl = `https://gnews.io/api/v4/search?q=${encodeURIComponent(
+        search
+      )}&lang=es&apikey=${apiKey}`;
+      console.log("Request URL:", apiUrl);
 
+      const response = await fetch(apiUrl);
       console.log("Response status:", response.status);
+
       const data = await response.json();
-      console.log("API Response:", data);
+      console.log("Full API Response:", data);
 
-      if (response.status === 401) {
-        setError(
-          "Error de autenticación: La API key no es válida o no está activa."
-        );
-        return;
-      }
-
-      if (response.status === 403) {
-        setError(
-          "Error de acceso: Has excedido el límite de peticiones o la API key no está activa."
-        );
+      if (response.status === 401 || response.status === 403) {
+        const errorMessage = data.errors
+          ? Object.values(data.errors)[0]
+          : "Error de autenticación con la API";
+        console.error("Authentication Error:", errorMessage);
+        setError(`Error de API: ${errorMessage}`);
         return;
       }
 
       if (!response.ok) {
-        throw new Error(
-          data.errors
-            ? Object.values(data.errors)[0]
-            : "Error al obtener las noticias"
-        );
+        const errorMessage = data.errors
+          ? Object.values(data.errors)[0]
+          : "Error desconocido";
+        throw new Error(errorMessage);
       }
 
       if (data.articles && data.articles.length > 0) {
@@ -64,18 +56,14 @@ const News = () => {
           url: article.url,
           description: article.description,
         }));
-        console.log("Transformed articles:", transformedArticles);
         setNews(transformedArticles);
       } else {
         setError("No se encontraron noticias para esta búsqueda");
         setNews([]);
       }
     } catch (error) {
-      console.error("Error fetching news:", error);
-      setError(
-        error.message ||
-          "Error al obtener las noticias. Por favor intenta de nuevo más tarde."
-      );
+      console.error("Detailed error:", error);
+      setError(`Error: ${error.message}`);
       setNews([]);
     } finally {
       setLoading(false);
@@ -216,7 +204,14 @@ const News = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700"></div>
             </div>
           )}
-          {error && <p className="text-center text-red-500 py-4">{error}</p>}
+          {error && (
+            <div className="text-center text-red-500 py-4">
+              <p>{error}</p>
+              <p className="text-sm mt-2">
+                API Key utilizada: {import.meta.env.VITE_API_KEY}
+              </p>
+            </div>
+          )}
           {!loading && !error && news.length > 0 ? (
             <Card data={news} />
           ) : (
